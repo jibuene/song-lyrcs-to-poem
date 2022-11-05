@@ -7,7 +7,7 @@
 </route>
 
 <script setup lang="ts">
-  import { ref, onMounted, watch, nextTick } from 'vue'
+  import { ref, onMounted, watch, nextTick, reactive } from 'vue'
 
   import axios from 'axios'
 
@@ -35,7 +35,7 @@
   }
 
   const getLyrics = async (artist: String) => {
-    const response = await axios.get('http://localhost:5000/api/v1/rap/search/' + artist)
+    const response = await axios.get('http://localhost:5000/api/v1/lyrics/search/' + artist)
     
     // Filter out useless lyrics and filler
     response.data = response.data.replace(/ *\[[^\]]*]/g, 'splithere')
@@ -52,7 +52,7 @@
 
 
   // Simple script to random choose google font
-  // Not my API key. Found on codepen
+  // Not my API key. Found on codepen lol
   const API_KEY = 'AIzaSyDDiO8nLVRMDaXwrJp61Cdcar5gFmmiR1Q';
   const loadFontsList = async () => {
     try {
@@ -80,7 +80,7 @@
     () => [state.lyricIdx, state.customFont],
     async () => {
       await nextTick()
-      if (textBox._value !== null) {
+      if (textBox.value !== null) {
         if (state.img.width !== textBox.value.clientWidth + 110 && state.img.height !== textBox.value.clientHeight + 70) {
           state.loading = true
         }
@@ -92,7 +92,6 @@
     }
   )
 
-
   onMounted(async () => {
     state.fontsList = await loadFontsList();
     loadRandomFont()
@@ -102,8 +101,8 @@
 
 <template>
   <div class="bg-base-100">
-    <div class="form-control h-screen center" v-if="state.lyric.length === 0">
-      <h1 class="font-xl">Search for artist</h1>
+    <div class="form-control center">
+      <h1 class="font-medium leading-tight text-4xl mt-0 mb-2">Search for artist</h1>
       <div class="input-group center">
         <input type="text" placeholder="Search…" class="input input-bordered w-3/6" v-model="state.artist" />
         <button class="btn btn-square" @click="getLyrics(state.artist)">
@@ -111,7 +110,7 @@
         </button>
       </div>
     </div>
-    <div v-else>
+    <div v-if="state.lyric.length !== 0">
       <img id="image" :src="'https://picsum.photos/' + state.img.width+'/'+state.img.height+'/?blur'" @load="state.loading = false" :hidden="state.loading" />
       <p id="text" style="white-space: pre-line;" :style="state.customFont" ref="textBox" :hidden="state.loading">
         {{ state.lyric[state.lyricIdx] }}
