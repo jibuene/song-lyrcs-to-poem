@@ -10,6 +10,8 @@
   import { ref, onMounted, watch, nextTick, reactive } from 'vue'
 
   import axios from 'axios'
+  import Swal from 'sweetalert2'
+  import { useHead } from '@vueuse/head';
 
   useHead({
     title: 'Home'
@@ -35,20 +37,28 @@
   }
 
   const getLyrics = async (artist: String) => {
-    const response = await axios.get('http://localhost:5000/api/v1/lyrics/search/' + artist)
-    
-    // Filter out useless lyrics and filler
-    response.data = response.data.replace(/ *\[[^\]]*]/g, 'splithere')
-    response.data = response.data.replace(/ *\[(^\))*]/g, 'splithere')
-    response.data = response.data.replaceAll('\x0a\x0a', 'splithere')
-    response.data = response.data.replaceAll('You might also like', '')
-    response.data = response.data.replaceAll('Embed', '')
+    try {
+      const response = await axios.get('http://localhost:5000/api/v1/lyrics/search/' + artist)
+      // Filter out useless lyrics and filler
+      response.data = response.data.replace(/ *\[[^\]]*]/g, 'splithere')
+      response.data = response.data.replace(/ *\[(^\))*]/g, 'splithere')
+      response.data = response.data.replaceAll('\x0a\x0a', 'splithere')
+      response.data = response.data.replaceAll('You might also like', '')
+      response.data = response.data.replaceAll('Embed', '')
+  
+      const lyrics = response.data.split('splithere').filter((x: string) => x.length > 20)
+      const randIndex = randomIntFromInterval(0, lyrics.length)
+      state.lyricIdx = randIndex
+      state.lyric = lyrics
+    } catch (error:any) {
+      Swal.fire({
+        title: error.response.data,
+        text: 'Try again or change the artist',
+        icon: 'error'
+      })
 
-    const lyrics = response.data.split('splithere').filter((x: string|any[]) => x.length > 20)
-    const randIndex = randomIntFromInterval(0, lyrics.length)
-    state.lyricIdx = randIndex
-    state.lyric = lyrics
-  }
+    }
+      }
 
 
   // Simple script to random choose google font
@@ -132,6 +142,7 @@
 
 <style scoped>
   #text {
+    /* White on black text magic */
     position: absolute;
     color: white;
     text-shadow: 1px 1px 0 #000,
