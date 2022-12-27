@@ -20,6 +20,7 @@
   const textBox = ref(null);
 
   const state = reactive({
+    title: '',
     lyric: '',
     artist: '',
     fontsList: [],
@@ -39,10 +40,16 @@
   const getLyrics = async (artist: String) => {
     try {
       const response = await axios.get('http://localhost:5000/api/v1/lyrics/search/' + artist)
+      console.log(response.data)
+      // Grab title
+      state.title = response.data.split('Lyrics')[0]
+      response.data = response.data.split('Lyrics')[1]
+
       // Filter out useless lyrics and filler
       response.data = response.data.replace(/ *\[[^\]]*]/g, 'splithere')
       response.data = response.data.replace(/ *\[(^\))*]/g, 'splithere')
       response.data = response.data.replaceAll('\x0a\x0a', 'splithere')
+      response.data = response.data.replaceAll('You might also like', '')
       response.data = response.data.replaceAll('You might also like', '')
       response.data = response.data.replaceAll('Embed', '')
   
@@ -121,19 +128,23 @@
       </div>
     </div>
     <div v-if="state.lyric.length !== 0">
-      <img id="image" :src="'https://picsum.photos/' + state.img.width+'/'+state.img.height+'/?blur'" @load="state.loading = false" :hidden="state.loading" />
-      <p id="text" style="white-space: pre-line;" :style="state.customFont" ref="textBox" :hidden="state.loading">
-        {{ state.lyric[state.lyricIdx] }}
-      </p>
-      <div class="form-control w-full max-w-xs">
-        <button class="btn btn-primary" @click="loadRandomFont()">Change font!</button>
-
+      <div class="form-control center mb-5">
+        <h1 class="font-medium leading-tight text-4xl mt-0 mb-2">{{ state.title }}</h1>
         <label class="label">
           <span class="label-text">Chose verse</span>
         </label>
         <select class="select select-bordered w-full max-w-xs" v-model="state.lyricIdx">
           <option v-for="idx in state.lyric.length" :key="idx">{{ idx - 1 }}</option>
         </select>
+
+      </div>
+
+      <img id="image" :src="'https://picsum.photos/' + state.img.width+'/'+state.img.height+'/?blur'" @load="state.loading = false" :hidden="state.loading" />
+      <p id="text" style="white-space: pre-line;" :style="state.customFont" ref="textBox" :hidden="state.loading">
+        {{ state.lyric[state.lyricIdx] }}
+      </p>
+      <div class="form-control w-full max-w-xs">
+        <button class="btn btn-primary" @click="loadRandomFont()">Change font!</button>
       </div>
     </div>
 
@@ -174,7 +185,7 @@
     font-size: 34px;
     font-weight: bold;
     left: 50px;
-    top: 120px;
+    top: 250px;
   }
 
   .center {
